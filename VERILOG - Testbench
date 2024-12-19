@@ -1,0 +1,70 @@
+module nco_tb;
+
+ // Inputs
+
+ reg clk;
+
+ reg reset;
+
+ reg [3:0] freq_sel;
+
+ // Outputs
+
+ wire [15:0] nco_out;
+
+ // Instantiate the NCO module
+
+ nco uut (
+
+ .clk(clk),
+
+ .reset(reset),
+
+ .freq_sel(freq_sel),
+
+ .nco_out(nco_out)
+
+ )
+
+ // Clock generation
+
+ initial begin
+
+ clk = 0;
+
+ forever #5 clk = ~clk; // 100 kHz clock period
+
+ end
+
+ // Test procedure
+
+ initial begin
+
+ // Initialize inputs
+
+ reset = 1;
+
+ freq_sel = 4'd0;
+
+ // Wait for 100 ns for global reset to finish
+
+ #100;
+
+ reset = 0;
+
+ // Test each frequency selection
+
+ for (integer i = 0; i <= 15; i = i + 1) begin
+freq_sel = i;
+
+ #50000; // Wait some time to observe the output
+
+ end
+
+ // Finish simulation
+
+ $stop;
+
+ end
+
+endmodule
