@@ -1,0 +1,92 @@
+module nco(
+
+ input wire clk, // System clock input
+
+ input wire reset, // Reset input
+
+ input wire [3:0] freq_sel, // Frequency selection input (0-10 corresponding to 10 kHz to 
+
+20 kHz)
+
+ output reg [15:0] nco_out // NCO output
+
+);
+
+ // Phase increment values for 10 kHz to 20 kHz with 1 kHz step
+
+ reg [31:0] phase_inc;
+
+ always @(*) begin
+
+ case (freq_sel)
+
+ 4'd0: phase_inc = 32'd42949673; // 10 kHz
+
+ 4'd1: phase_inc = 32'd47244640; // 11 kHz
+
+ 4'd2: phase_inc = 32'd51539607; // 12 kHz
+
+ 4'd3: phase_inc = 32'd55834573; // 13 kHz
+
+ 4'd4: phase_inc = 32'd60129540; // 14 kHz
+
+ 4'd5: phase_inc = 32'd64424507; // 15 kHz
+
+ 4'd6: phase_inc = 32'd68719474; // 16 kHz
+
+ 4'd7: phase_inc = 32'd73014440; // 17 kHz
+
+ 4'd8: phase_inc = 32'd77309407; // 18 kHz
+
+ 4'd9: phase_inc = 32'd81604374; // 19 kHz
+
+ 4'd10: phase_inc = 32'd85899341; // 20 kHz
+
+ default: phase_inc = 32'd42949673; // Default to 10 kHz
+
+ endcase
+
+ end
+
+ reg [31:0] phase_accumulator;
+always @(posedge clk or posedge reset) begin
+
+ if (reset) begin
+
+ phase_accumulator <= 32'b0;
+
+ end else begin
+
+ phase_accumulator <= phase_accumulator + phase_inc;
+
+ end
+
+ end
+
+ // Sine wave lookup table (1024 entries, 16-bit width)
+
+ reg [15:0] sine_lut [0:1023];
+
+ initial begin
+
+ $readmemh("sine_lut.mem", sine_lut);
+
+ end
+
+ // Output the corresponding value from the sine LUT
+
+ always @(posedge clk or posedge reset) begin
+
+ if (reset) begin
+
+ nco_out <= 16'h0000;
+
+ end else begin
+
+ nco_out <= sine_lut[phase_accumulator[31:22]]; // Use the top 10 bits as an index
+
+ end
+
+ end
+
+endmodule
